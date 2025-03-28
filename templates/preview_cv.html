@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Preview CV{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Preview CV: {{ cv.filename }}</h2>
+    <pre>{{ cv.content }}</pre>
+    <a href="{{ url_for('analyze') }}" class="btn btn-primary">Back</a>
+</div>
+{% endblock %}

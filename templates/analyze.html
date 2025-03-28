@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Analyze CV{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Analyze Your CV</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label>Job Description</label>
+            <textarea name="job_desc" class="form-control" rows="5" required>{{ job_desc }}</textarea>
+        </div>
+        <div class="form-group">
+            <label>CV Selection</label>
+            <select name="cv_selection" class="form-control" onchange="toggleCVUpload(this.value)">
+                <option value="new">Upload New CV</option>
+                {% if pre_uploaded_cvs %}
+                    <option value="existing">Use Existing CV</option>
+                {% endif %}
+            </select>
+        </div>
+        <div id="new_cv_upload" class="form-group" {% if not can_upload_new %}style="display:none;"{% endif %}>
+            <label>Upload CV (PDF or DOCX)</label>
+            <input type="file" name="cv_file" class="form-control-file" accept=".pdf,.docx" {% if not can_upload_new %}disabled{% endif %}>
+            {% if not can_upload_new %}
+                <p class="text-danger">Maximum CV limit ({{ max_cvs }}) reached.</p>
+            {% endif %}
+        </div>
+        <div id="existing_cv_select" class="form-group" style="display:none;">
+            <label>Select Pre-Uploaded CV</label>
+            <select name="pre_uploaded_cv" class="form-control">
+                {% for cv in pre_uploaded_cvs %}
+                    <option value="{{ cv.id }}">{{ cv.filename }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Analyze</button>
+    </form>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info mt-3">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+<script>
+    function toggleCVUpload(selection) {
+        document.getElementById('new_cv_upload').style.display = selection === 'new' ? 'block' : 'none';
+        document.getElementById('existing_cv_select').style.display = selection === 'existing' ? 'block' : 'none';
+    }
+</script>
+{% endblock %}

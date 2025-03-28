@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Upload CV{% endblock %}
+{% block content %}
+<h1>Upload CV</h1>
+<p>You have {{ cv_count }}/{{ max_cvs }} CVs saved.</p>
+<form method="POST" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="cv_file">Upload CV (PDF or DOCX):</label>
+        <input type="file" id="cv_file" name="cv_file" accept=".pdf,.docx" required>
+    </div>
+    <button type="submit">Upload</button>
+</form>
+<a href="{{ url_for('analyze') }}">Back to Analyze</a>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}INU Grow{% endblock %}
+{% block content %}
+<div class="container text-center mt-5">
+    <h1>Welcome to INU Grow</h1>
+    <p>Optimize your job applications with AI-powered tools.</p>
+    <a href="{{ url_for('login') }}" class="btn btn-primary">Log In</a>
+    <a href="{{ url_for('register') }}" class="btn btn-secondary">Register</a>
+</div>
+{% endblock %}

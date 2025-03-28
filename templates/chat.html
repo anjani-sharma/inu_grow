@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Job Search{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Job Search</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label>Query</label>
+            <input type="text" name="query" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label>Location</label>
+            <input type="text" name="location" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+    {% if jobs %}
+        <h3 class="mt-4">Results</h3>
+        <ul>
+            {% for job in jobs %}
+                <li>{{ job.title }} - {{ job.location }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</div>
+{% endblock %}
