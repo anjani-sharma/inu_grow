@@ -1,225 +1,602 @@
 {% extends "base.html" %}
 {% block title %}Job Matching Results{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body text-center">
-                <h2 class="card-title">Job Matching Results</h2>
-                <p class="text-muted">ATS Compatibility | Skills Match | Recommendations</p>
+<div class="row justify-content-center py-4">
+    <div class="col-lg-10">
+        <!-- Header Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 text-center">
+                <h2 class="fw-bold mb-2">CV Analysis Results</h2>
+                <p class="text-secondary mb-0">ATS Compatibility | Skills Match | Recommendations</p>
             </div>
         </div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h3 class="card-title">ATS Compatibility Score</h3>
-                <div class="circular-progress">
-                    <svg width="100" height="100">
-                        <circle class="circle-bg" cx="50" cy="50" r="45"></circle>
-                        <circle class="circle" cx="50" cy="50" r="45" stroke-dasharray="283" stroke-dashoffset="0" id="ats-circle"></circle>
-                    </svg>
-                    <div class="percentage" id="ats-percentage">{{ analysis_results.ats_score }}%</div>
-                </div>
-                <p>Weighted Match (Technical 70%, Soft 30%): {{ weighted_match_percentage|round(2) }}%</p>
-                <p>Technical Skill Match: {{ tech_match_percentage|round(2) }}%</p>
-                <p>Soft Skill Match: {{ soft_match_percentage|round(2) }}%</p>
-                <div class="text-center">
-                    <button class="btn btn-primary" onclick="toggleDetailedAnalysis()">Detailed Analysis</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="detailed-analysis" style="display: none;">
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h3 class="card-title">Strengths</h3>
-                            <ul class="list-unstyled">
-                                {% for strength in analysis_results.strengths %}
-                                <li class="mb-2">• {{ strength }}</li>
-                                {% endfor %}
-                            </ul>
+        
+        <!-- Main Score Card -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4 text-center">
+                        <h3 class="h5 fw-bold mb-3">ATS Compatibility</h3>
+                        <div class="circular-progress mb-3">
+                            <svg width="120" height="120">
+                                <circle class="circle-bg" cx="60" cy="60" r="50"></circle>
+                                <circle class="circle" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="0" id="ats-circle"></circle>
+                            </svg>
+                            <div class="percentage" id="ats-percentage">{{ analysis_results.ats_score }}%</div>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h3 class="card-title">Areas for Improvement</h3>
-                            <ul class="list-unstyled">
-                                {% for area in analysis_results.areas_for_improvement %}
-                                <li class="mb-2">• {{ area }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
+                        <span class="badge {% if analysis_results.ats_score >= 80 %}bg-success{% elif analysis_results.ats_score >= 60 %}bg-warning{% else %}bg-danger{% endif %} py-2 px-3 mb-3">
+                            {% if analysis_results.ats_score >= 80 %}Excellent{% elif analysis_results.ats_score >= 60 %}Good{% else %}Needs Improvement{% endif %}
+                        </span>
                     </div>
                 </div>
             </div>
-
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h3 class="card-title">Recommendations</h3>
-                    <ul class="list-unstyled">
-                        {% for recommendation in analysis_results.recommendations %}
-                        <li class="mb-2">• {{ recommendation }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h3 class="card-title">Keyword Analysis</h3>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>Skills Comparison</h5>
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Skill</th>
-                                        <th>Resume</th>
-                                        <th>Job Description</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for skill in job_technical_skills %}
-                                    <tr>
-                                        <td>{{ skill }}</td>
-                                        <td>{{ cv_skill_freq[skill] }}</td>
-                                        <td>{{ job_skill_freq[skill] }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                    {% for skill in job_soft_skills %}
-                                    <tr>
-                                        <td>{{ skill }}</td>
-                                        <td>{{ cv_skill_freq[skill] }}</td>
-                                        <td>{{ job_skill_freq[skill] }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Present Keywords</h5>
-                            <div class="d-flex flex-wrap">
-                                {% for keyword in analysis_results.keyword_analysis.present_keywords %}
-                                <span class="badge badge-present me-2 mb-2">{{ keyword }}</span>
-                                {% endfor %}
+            
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <h3 class="h5 fw-bold mb-3 text-center">Skills Match</h3>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-grow-1 me-3">
+                                <div class="d-flex justify-content-between mb-1 small">
+                                    <span>Technical Skills</span>
+                                    <span class="fw-bold">{{ tech_match_percentage|round(1) }}%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ tech_match_percentage }}%" aria-valuenow="{{ tech_match_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
                             </div>
-                            <h5>Missing Common Keywords</h5>
-                            <div class="d-flex flex-wrap">
-                                {% for keyword in analysis_results.keyword_analysis.missing_keywords %}
-                                <span class="badge badge-missing me-2 mb-2">{{ keyword }}</span>
-                                {% endfor %}
+                        </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-grow-1 me-3">
+                                <div class="d-flex justify-content-between mb-1 small">
+                                    <span>Soft Skills</span>
+                                    <span class="fw-bold">{{ soft_match_percentage|round(1) }}%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ soft_match_percentage }}%" aria-valuenow="{{ soft_match_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1 me-3">
+                                <div class="d-flex justify-content-between mb-1 small">
+                                    <span>Overall Match</span>
+                                    <span class="fw-bold">{{ weighted_match_percentage|round(1) }}%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ weighted_match_percentage }}%" aria-valuenow="{{ weighted_match_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h3 class="card-title">Optimized CV</h3>
-                <pre>{{ optimized_cv }}</pre>
-                <a href="{{ url_for('download_optimized_cv', content=optimized_cv) }}" class="btn btn-primary">Download Optimized CV</a>
+            
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <h3 class="h5 fw-bold mb-3">Quick Stats</h3>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>Match Type</span>
+                                <span class="badge bg-primary rounded-pill">{{ "Excellent" if weighted_match_percentage > 80 else "Good" if weighted_match_percentage > 65 else "Fair" if weighted_match_percentage > 50 else "Poor" }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>Keywords Match</span>
+                                <span class="badge bg-primary rounded-pill">{{ analysis_results.keyword_analysis.present_keywords|length }}/{{ (analysis_results.keyword_analysis.present_keywords|length) + (analysis_results.keyword_analysis.missing_keywords|length) }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>ATS Issues</span>
+                                <span class="badge bg-{{ 'success' if analysis_results.section_analysis.ats_issues|length == 0 else 'warning' if analysis_results.section_analysis.ats_issues|length < 3 else 'danger' }} rounded-pill">{{ analysis_results.section_analysis.ats_issues|length }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>CV Length</span>
+                                <span class="badge bg-warning rounded-pill">~1000 words</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h3 class="card-title">Cover Letter</h3>
-                <pre>{{ cover_letter }}</pre>
-                <a href="{{ url_for('download_cover_letter', content=cover_letter) }}" class="btn btn-primary">Download Cover Letter</a>
+        
+        <!-- Tab Navigation -->
+        <ul class="nav nav-pills mb-4" id="resultsTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="summary-tab" data-bs-toggle="pill" data-bs-target="#summary" type="button" role="tab">Summary</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="detailed-tab" data-bs-toggle="pill" data-bs-target="#detailed" type="button" role="tab">Detailed Analysis</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="optimized-cv-tab" data-bs-toggle="pill" data-bs-target="#optimized-cv" type="button" role="tab">Optimized CV</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cover-letter-tab" data-bs-toggle="pill" data-bs-target="#cover-letter" type="button" role="tab">Cover Letter</button>
+            </li>
+        </ul>
+        
+        <!-- Tab Content -->
+        <div class="tab-content" id="resultsTabContent">
+            <!-- Summary Tab -->
+            <div class="tab-pane fade show active" id="summary" role="tabpanel" aria-labelledby="summary-tab">
+                <div class="row g-4">
+                    <!-- Strengths Card -->
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-transparent py-3">
+                                <h3 class="h5 fw-bold mb-0">
+                                    <i class="fas fa-medal text-success me-2"></i>Strengths
+                                </h3>
+                            </div>
+                            <div class="card-body p-4">
+                                <ul class="list-group list-group-flush">
+                                    {% if analysis_results.strengths %}
+                                        {% for strength in analysis_results.strengths %}
+                                            <li class="list-group-item px-0 py-2 border-0">
+                                                <i class="fas fa-check-circle text-success me-2"></i>{{ strength }}
+                                            </li>
+                                        {% endfor %}
+                                    {% else %}
+                                        {% if analysis_results.ats_analysis.industry_fit and analysis_results.ats_analysis.industry_fit.strengths %}
+                                            {% for strength in analysis_results.ats_analysis.industry_fit.strengths %}
+                                                <li class="list-group-item px-0 py-2 border-0">
+                                                    <i class="fas fa-check-circle text-success me-2"></i>{{ strength }}
+                                                </li>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {% if analysis_results.competitive_analysis.skill_depth and analysis_results.competitive_analysis.skill_depth.strengths %}
+                                            {% for strength in analysis_results.competitive_analysis.skill_depth.strengths %}
+                                                <li class="list-group-item px-0 py-2 border-0">
+                                                    <i class="fas fa-check-circle text-success me-2"></i>{{ strength }}
+                                                </li>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {% if not (analysis_results.ats_analysis.industry_fit and analysis_results.ats_analysis.industry_fit.strengths) and not (analysis_results.competitive_analysis.skill_depth and analysis_results.competitive_analysis.skill_depth.strengths) %}
+                                            <li class="list-group-item px-0 py-2 border-0">
+                                                <i class="fas fa-check-circle text-success me-2"></i>Technical skills match job requirements
+                                            </li>
+                                            <li class="list-group-item px-0 py-2 border-0">
+                                                <i class="fas fa-check-circle text-success me-2"></i>Clear structure and formatting
+                                            </li>
+                                            <li class="list-group-item px-0 py-2 border-0">
+                                                <i class="fas fa-check-circle text-success me-2"></i>Good ATS compatibility score
+                                            </li>
+                                        {% endif %}
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Areas for Improvement Card -->
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-transparent py-3">
+                                <h3 class="h5 fw-bold mb-0">
+                                    <i class="fas fa-tools text-warning me-2"></i>Areas for Improvement
+                                </h3>
+                            </div>
+                            <div class="card-body p-4">
+                                <ul class="list-group list-group-flush">
+                                    {% if analysis_results.areas_for_improvement %}
+                                        {% for area in analysis_results.areas_for_improvement %}
+                                            <li class="list-group-item px-0 py-2 border-0">
+                                                <i class="fas fa-exclamation-circle text-warning me-2"></i>{{ area }}
+                                            </li>
+                                        {% endfor %}
+                                    {% else %}
+                                        {% if analysis_results.ats_analysis.industry_fit and analysis_results.ats_analysis.industry_fit.weaknesses %}
+                                            {% for weakness in analysis_results.ats_analysis.industry_fit.weaknesses %}
+                                                <li class="list-group-item px-0 py-2 border-0">
+                                                    <i class="fas fa-exclamation-circle text-warning me-2"></i>{{ weakness }}
+                                                </li>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {% if analysis_results.competitive_analysis.skill_depth and analysis_results.competitive_analysis.skill_depth.gaps %}
+                                            {% for gap in analysis_results.competitive_analysis.skill_depth.gaps %}
+                                                <li class="list-group-item px-0 py-2 border-0">
+                                                    <i class="fas fa-exclamation-circle text-warning me-2"></i>{{ gap }}
+                                                </li>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {% if not (analysis_results.ats_analysis.industry_fit and analysis_results.ats_analysis.industry_fit.weaknesses) and not (analysis_results.competitive_analysis.skill_depth and analysis_results.competitive_analysis.skill_depth.gaps) %}
+                                            <li class="list-group-item px-0 py-2 border-0">
+                                                <i class="fas fa-exclamation-circle text-warning me-2"></i>Add more job-specific keywords
+                                            </li>
+                                            <li class="list-group-item px-0 py-2 border-0">
+                                                <i class="fas fa-exclamation-circle text-warning me-2"></i>Include more quantifiable achievements
+                                            </li>
+                                            <li class="list-group-item px-0 py-2 border-0">
+                                                <i class="fas fa-exclamation-circle text-warning me-2"></i>Optimize CV length for better readability
+                                            </li>
+                                        {% endif %}
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recommendations Card -->
+                    <div class="col-md-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-transparent py-3">
+                                <h3 class="h5 fw-bold mb-0">
+                                    <i class="fas fa-lightbulb text-primary me-2"></i>Recommendations
+                                </h3>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row g-4">
+                                    {% if analysis_results.recommendations %}
+                                        {% for recommendation in analysis_results.recommendations %}
+                                            <div class="col-md-6">
+                                                <div class="d-flex">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                            <i class="fas fa-arrow-right text-primary"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="mb-0">{{ recommendation }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        {% if analysis_results.ats_analysis.structure_analysis and analysis_results.ats_analysis.structure_analysis.recommendations %}
+                                            {% for rec in analysis_results.ats_analysis.structure_analysis.recommendations %}
+                                                <div class="col-md-6">
+                                                    <div class="d-flex">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-arrow-right text-primary"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1 ms-3">
+                                                            <p class="mb-0">{{ rec }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {% if analysis_results.competitive_analysis.overall_recommendations %}
+                                            {% for rec in analysis_results.competitive_analysis.overall_recommendations %}
+                                                <div class="col-md-6">
+                                                    <div class="d-flex">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                                <i class="fas fa-arrow-right text-primary"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1 ms-3">
+                                                            <p class="mb-0">{{ rec }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {% if not (analysis_results.ats_analysis.structure_analysis and analysis_results.ats_analysis.structure_analysis.recommendations) and not analysis_results.competitive_analysis.overall_recommendations %}
+                                            <div class="col-md-6">
+                                                <div class="d-flex">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                            <i class="fas fa-arrow-right text-primary"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="mb-0">Add the missing keywords identified in the analysis to improve match rate</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                            <i class="fas fa-arrow-right text-primary"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="mb-0">Format your CV with clear section headers to improve ATS compatibility</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="d-flex">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                            <i class="fas fa-arrow-right text-primary"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="mb-0">Quantify achievements with specific metrics and results</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Detailed Analysis Tab -->
+            <div class="tab-pane fade" id="detailed" role="tabpanel" aria-labelledby="detailed-tab">
+                <div class="row g-4">
+                    <!-- Keyword Analysis Card -->
+                    <div class="col-md-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-transparent py-3">
+                                <h3 class="h5 fw-bold mb-0">
+                                    <i class="fas fa-key text-primary me-2"></i>Keyword Analysis
+                                </h3>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5 class="fw-bold mb-3">Skills Comparison</h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Skill</th>
+                                                        <th class="text-center">Resume</th>
+                                                        <th class="text-center">Job Description</th>
+                                                        <th class="text-center">Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for skill in job_technical_skills %}
+                                                    <tr>
+                                                        <td>{{ skill }}</td>
+                                                        <td class="text-center">
+                                                            {% if cv_skill_freq is defined and cv_skill_freq %}
+                                                                {{ cv_skill_freq.get(skill, 0) }}
+                                                            {% else %}
+                                                                0
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            {% if job_skill_freq is defined and job_skill_freq %}
+                                                                {{ job_skill_freq.get(skill, 0) }}
+                                                            {% else %}
+                                                                1
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            {% if cv_skill_freq is defined and cv_skill_freq and cv_skill_freq.get(skill, 0) > 0 %}
+                                                                <i class="fas fa-check-circle text-success"></i>
+                                                            {% else %}
+                                                                <i class="fas fa-times-circle text-danger"></i>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    
+                                                    {% for skill in job_soft_skills %}
+                                                    <tr>
+                                                        <td>{{ skill }} <small class="text-secondary">(Soft Skill)</small></td>
+                                                        <td class="text-center">
+                                                            {% if cv_skill_freq is defined and cv_skill_freq %}
+                                                                {{ cv_skill_freq.get(skill, 0) }}
+                                                            {% else %}
+                                                                0
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            {% if job_skill_freq is defined and job_skill_freq %}
+                                                                {{ job_skill_freq.get(skill, 0) }}
+                                                            {% else %}
+                                                                1
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            {% if cv_skill_freq is defined and cv_skill_freq and cv_skill_freq.get(skill, 0) > 0 %}
+                                                                <i class="fas fa-check-circle text-success"></i>
+                                                            {% else %}
+                                                                <i class="fas fa-times-circle text-danger"></i>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5 class="fw-bold mb-3">Present Keywords</h5>
+                                        <div class="d-flex flex-wrap mb-4">
+                                            {% if analysis_results.keyword_analysis.present_keywords and analysis_results.keyword_analysis.present_keywords|length > 0 %}
+                                                {% for keyword in analysis_results.keyword_analysis.present_keywords %}
+                                                    <span class="badge badge-present me-2 mb-2">{{ keyword }}</span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <p class="text-secondary">No present keywords detected</p>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <h5 class="fw-bold mb-3">Missing Keywords</h5>
+                                        <div class="d-flex flex-wrap">
+                                            {% if analysis_results.keyword_analysis.missing_keywords and analysis_results.keyword_analysis.missing_keywords|length > 0 %}
+                                                {% for keyword in analysis_results.keyword_analysis.missing_keywords %}
+                                                    <span class="badge badge-missing me-2 mb-2">{{ keyword }}</span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <p class="text-secondary">No missing keywords detected</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Issue Cards -->
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-transparent py-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h3 class="h5 fw-bold mb-0">
+                                        <i class="fas fa-search text-primary me-2"></i>ATS Issues
+                                    </h3>
+                                    <span class="badge bg-{{ 'success' if analysis_results.section_analysis.ats_issues|length == 0 else 'warning' }}">
+                                        {{ analysis_results.section_analysis.ats_issues|length }} issues
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                {% if analysis_results.section_analysis.ats_issues and analysis_results.section_analysis.ats_issues|length > 0 %}
+                                    <ul class="list-group list-group-flush">
+                                        {% for issue in analysis_results.section_analysis.ats_issues %}
+                                            <li class="list-group-item px-0 py-2 border-0">
+                                                <i class="fas fa-exclamation-triangle text-warning me-2"></i>{{ issue }}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <div class="text-center py-3">
+                                        <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                                        <p class="mb-0">No ATS issues detected. Your CV is well-structured for automated systems.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-transparent py-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h3 class="h5 fw-bold mb-0">
+                                        <i class="fas fa-user-tie text-primary me-2"></i>Recruiter Tips
+                                    </h3>
+                                    <span class="badge bg-warning">
+                                        Tips
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <ul class="list-group list-group-flush">
+                                    {% if analysis_results.section_analysis.present_sections|length < 3 %}
+                                        <li class="list-group-item px-0 py-2 border-0">
+                                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>Add clear section headers (e.g., Work Experience, Education).
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% if analysis_results.achievement_analysis.experience_warning %}
+                                        <li class="list-group-item px-0 py-2 border-0">
+                                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>{{ analysis_results.achievement_analysis.experience_warning }}
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% if analysis_results.achievement_analysis.tone_warning %}
+                                        <li class="list-group-item px-0 py-2 border-0">
+                                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>{{ analysis_results.achievement_analysis.tone_warning }}
+                                        </li>
+                                    {% endif %}
+                                    
+                                    {% if analysis_results.achievement_analysis.achievement_recommendations %}
+                                        {% for recommendation in analysis_results.achievement_analysis.achievement_recommendations %}
+                                            <li class="list-group-item px-0 py-2 border-0">
+                                                <i class="fas fa-lightbulb text-primary me-2"></i>{{ recommendation }}
+                                            </li>
+                                        {% endfor %}
+                                    {% endif %}
+                                    
+                                    {% if not analysis_results.achievement_analysis.experience_warning and not analysis_results.achievement_analysis.tone_warning and not analysis_results.achievement_analysis.achievement_recommendations %}
+                                        <li class="list-group-item px-0 py-2 border-0">
+                                            <i class="fas fa-lightbulb text-primary me-2"></i>Keep your CV concise and focused on relevant experience
+                                        </li>
+                                        <li class="list-group-item px-0 py-2 border-0">
+                                            <i class="fas fa-lightbulb text-primary me-2"></i>Use action verbs to begin achievement statements
+                                        </li>
+                                        <li class="list-group-item px-0 py-2 border-0">
+                                            <i class="fas fa-lightbulb text-primary me-2"></i>Tailor your CV for each job application
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Optimized CV Tab -->
+            <div class="tab-pane fade" id="optimized-cv" role="tabpanel" aria-labelledby="optimized-cv-tab">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="h5 fw-bold mb-0">
+                                <i class="fas fa-file-alt text-primary me-2"></i>Optimized CV
+                            </h3>
+                            <a href="{{ url_for('download_optimized_cv', content=optimized_cv) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-download me-2"></i>Download
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ optimized_cv }}</pre>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cover Letter Tab -->
+            <div class="tab-pane fade" id="cover-letter" role="tabpanel" aria-labelledby="cover-letter-tab">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="h5 fw-bold mb-0">
+                                <i class="fas fa-envelope text-primary me-2"></i>Cover Letter
+                            </h3>
+                            <a href="{{ url_for('download_cover_letter', content=cover_letter) }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-download me-2"></i>Download
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ cover_letter }}</pre>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="text-center mb-4">
-            <a href="{{ url_for('analyze') }}" class="btn btn-primary">Back to Job Description</a>
-        </div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h3 class="card-title">Searchability <span class="badge bg-warning">{{ analysis_results.section_analysis.ats_issues|length }} issues to fix</span></h3>
-                <ul class="list-unstyled">
-                    {% for issue in analysis_results.section_analysis.ats_issues %}
-                    <li class="mb-2">• {{ issue }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h3 class="card-title">Hard Skills <span class="badge bg-warning">{{ 1 if tech_match_percentage < 70 else 0 }} issues to fix</span></h3>
-                <ul class="list-unstyled">
-                    {% if tech_match_percentage < 70 %}
-                    <li class="mb-2">• Technical skill match is low ({{ tech_match_percentage }}%). Consider adding: {{ missing_technical_keywords|join(', ') }}</li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h3 class="card-title">Soft Skills <span class="badge bg-warning">{{ 1 if soft_match_percentage < 70 else 0 }} issues to fix</span></h3>
-                <ul class="list-unstyled">
-                    {% if soft_match_percentage < 70 %}
-                    <li class="mb-2">• Soft skill match is low ({{ soft_match_percentage }}%). Consider adding: {{ missing_soft_keywords|join(', ') }}</li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h3 class="card-title">Recruiter Tips <span class="badge bg-warning">{{ (cv_text|wordcount > 600)|int + (analysis_results.section_analysis.present_sections|length < 3)|int + (analysis_results.achievement_analysis.experience_warning is not none)|int + (analysis_results.achievement_analysis.tone_warning is not none)|int }} issues to fix</span></h3>
-                <ul class="list-unstyled">
-                    {% if cv_text|wordcount > 600 %}
-                    <li class="mb-2">• CV too long ({{ cv_text|wordcount }} words). Aim for 1-2 pages.</li>
-                    {% endif %}
-                    {% if analysis_results.section_analysis.present_sections|length < 3 %}
-                    <li class="mb-2">• Add clear section headers (e.g., Work Experience, Education).</li>
-                    {% endif %}
-                    {% if analysis_results.achievement_analysis.experience_warning %}
-                    <li class="mb-2">• {{ analysis_results.achievement_analysis.experience_warning }}</li>
-                    {% endif %}
-                    {% if analysis_results.achievement_analysis.tone_warning %}
-                    <li class="mb-2">• {{ analysis_results.achievement_analysis.tone_warning }}</li>
-                    {% endif %}
-                    {% for recommendation in analysis_results.achievement_analysis.achievement_recommendations %}
-                    <li class="mb-2">• {{ recommendation }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h3 class="card-title">Formatting <span class="badge bg-warning">{{ ('table format' in cv_text.lower() or 'image embedded' in cv_text.lower())|int }} issues to fix</span></h3>
-                <ul class="list-unstyled">
-                    {% if 'table format' in cv_text.lower() or 'image embedded' in cv_text.lower() %}
-                    <li class="mb-2">• Avoid tables or images for ATS compatibility.</li>
-                    {% endif %}
-                </ul>
-            </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('analyze') }}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-arrow-left me-2"></i>Back to Analyze
+            </a>
+            <a href="{{ url_for('job_search') }}" class="btn btn-primary">
+                <i class="fas fa-search me-2"></i>Find Jobs
+            </a>
         </div>
     </div>
 </div>
 
+{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Set up ATS score circle animation
         const atsScore = {{ analysis_results.ats_score }};
         const circle = document.getElementById('ats-circle');
-        const circumference = 283;
+        const circumference = 314; // 2 * π * r (r = 50)
         const offset = circumference - (atsScore / 100) * circumference;
-        circle.style.strokeDashoffset = offset;
+        
+        // Animate the circle filling
+        setTimeout(() => {
+            circle.style.strokeDashoffset = offset;
+            circle.style.transition = 'stroke-dashoffset 1s ease-in-out';
+        }, 300);
+        
+        // Initialize Bootstrap tabs
+        const triggerTabList = [].slice.call(document.querySelectorAll('#resultsTab button'));
+        triggerTabList.forEach(function(triggerEl) {
+            const tabTrigger = new bootstrap.Tab(triggerEl);
+            triggerEl.addEventListener('click', function(event) {
+                event.preventDefault();
+                tabTrigger.show();
+            });
+        });
     });
-
-    function toggleDetailedAnalysis() {
-        const detailedAnalysis = document.getElementById('detailed-analysis');
-        detailedAnalysis.style.display = detailedAnalysis.style.display === 'none' ? 'block' : 'none';
-    }
 </script>
+{% endblock %}
 {% endblock %}

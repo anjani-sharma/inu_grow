@@ -1,51 +1,135 @@
 {% extends "base.html" %}
 {% block title %}Analyze CV{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <h2>Analyze Your CV</h2>
-    <form method="POST" enctype="multipart/form-data">
-        <div class="form-group">
-            <label>Job Description</label>
-            <textarea name="job_desc" class="form-control" rows="5" required>{{ job_desc }}</textarea>
+<div class="row justify-content-center py-4">
+    <div class="col-lg-10">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h2 class="card-title fw-bold mb-1">Analyze Your CV</h2>
+                <p class="text-secondary mb-4">Our AI will analyze your CV against a job description to optimize your application</p>
+                
+                <form method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <div class="row g-4">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="job_desc" class="form-label fw-medium">Job Description</label>
+                                <textarea name="job_desc" id="job_desc" class="form-control" rows="6" placeholder="Paste the job description here to match your CV against it" required>{{ job_desc }}</textarea>
+                                <div class="form-text text-secondary small">For best results, include the complete job description with all requirements and responsibilities.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-label fw-medium">CV Selection</label>
+                                <select name="cv_selection" id="cv_selection" class="form-select" onchange="toggleCVUpload(this.value)">
+                                    <option value="new">Upload New CV</option>
+                                    {% if pre_uploaded_cvs %}
+                                        <option value="existing">Use Existing CV</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div id="new_cv_upload" class="col-md-12" {% if not can_upload_new %}style="display:none;"{% endif %}>
+                            <div class="form-group">
+                                <label for="cv_file" class="form-label fw-medium">Upload CV (PDF or DOCX)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-file-upload text-secondary"></i>
+                                    </span>
+                                    <input type="file" name="cv_file" id="cv_file" class="form-control" accept=".pdf,.docx" {% if not can_upload_new %}disabled{% endif %}>
+                                </div>
+                                {% if not can_upload_new %}
+                                    <div class="alert alert-warning mt-2">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>Maximum CV limit ({{ max_cvs }}) reached. Please delete some existing CVs.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div id="existing_cv_select" class="col-md-12" style="display:none;">
+                            <div class="form-group">
+                                <label for="pre_uploaded_cv" class="form-label fw-medium">Select Pre-Uploaded CV</label>
+                                <select name="pre_uploaded_cv" id="pre_uploaded_cv" class="form-select">
+                                    {% for cv in pre_uploaded_cvs %}
+                                        <option value="{{ cv.id }}">{{ cv.filename }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-12 mt-2">
+                            <button type="submit" class="btn btn-primary py-2 px-4">
+                                <i class="fas fa-search me-2"></i>Analyze CV
+                            </button>
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary py-2 px-4 ms-2">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="form-group">
-            <label>CV Selection</label>
-            <select name="cv_selection" class="form-control" onchange="toggleCVUpload(this.value)">
-                <option value="new">Upload New CV</option>
-                {% if pre_uploaded_cvs %}
-                    <option value="existing">Use Existing CV</option>
-                {% endif %}
-            </select>
+        
+        <!-- Features cards -->
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <img src="{{ url_for('static', filename='images/analysis-icon.png') }}" alt="Job Search" width="40" height="40">
+                        </div>
+                        <h3 class="h5 card-title">AI Analysis</h3>
+                        <p class="card-text text-secondary small">Our AI evaluates your CV against ATS systems to ensure it passes automated screening.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <img src="{{ url_for('static', filename='images/search-icon.png') }}" alt="Job Search" width="40" height="40">
+                        </div>
+                        <h3 class="h5 card-title">Optimized CV</h3>
+                        <p class="card-text text-secondary small">Receive tailored CV suggestions to highlight your most relevant skills and experience.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4 text-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3">
+                            <img src="{{ url_for('static', filename='images/cover-icon.png') }}" alt="Job Search" width="40" height="40">
+                        </div>
+                        <h3 class="h5 card-title">Cover Letter</h3>
+                        <p class="card-text text-secondary small">Get a personalized cover letter draft tailored to the job description and your experience.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div id="new_cv_upload" class="form-group" {% if not can_upload_new %}style="display:none;"{% endif %}>
-            <label>Upload CV (PDF or DOCX)</label>
-            <input type="file" name="cv_file" class="form-control-file" accept=".pdf,.docx" {% if not can_upload_new %}disabled{% endif %}>
-            {% if not can_upload_new %}
-                <p class="text-danger">Maximum CV limit ({{ max_cvs }}) reached.</p>
-            {% endif %}
-        </div>
-        <div id="existing_cv_select" class="form-group" style="display:none;">
-            <label>Select Pre-Uploaded CV</label>
-            <select name="pre_uploaded_cv" class="form-control">
-                {% for cv in pre_uploaded_cvs %}
-                    <option value="{{ cv.id }}">{{ cv.filename }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Analyze</button>
-    </form>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-info mt-3">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+    </div>
 </div>
+
 <script>
     function toggleCVUpload(selection) {
         document.getElementById('new_cv_upload').style.display = selection === 'new' ? 'block' : 'none';
         document.getElementById('existing_cv_select').style.display = selection === 'existing' ? 'block' : 'none';
     }
+    
+    // Form validation
+    (function() {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
 </script>
 {% endblock %}

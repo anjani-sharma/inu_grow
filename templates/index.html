@@ -1,10 +1,172 @@
 {% extends "base.html" %}
-{% block title %}INU Grow{% endblock %}
+{% block title %}Home{% endblock %}
+
 {% block content %}
-<div class="container text-center mt-5">
-    <h1>Welcome to INU Grow</h1>
-    <p>Optimize your job applications with AI-powered tools.</p>
-    <a href="{{ url_for('login') }}" class="btn btn-primary">Log In</a>
-    <a href="{{ url_for('register') }}" class="btn btn-secondary">Register</a>
-</div>
+<!-- Hero Section -->
+<section class="py-5">
+    <div class="row align-items-center">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <h1 class="display-4 fw-bold mb-3">AI-Powered Career Advancement & Job Optimization</h1>
+            <p class="lead text-secondary mb-4">INU Grow uses AI-powered tools to help you create tailored job applications, improving your chances of landing interviews and securing your dream job.</p>
+            <div class="d-flex flex-wrap gap-2">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('analyze') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-file-alt me-2"></i>Analyze Your CV
+                    </a>
+                    <a href="{{ url_for('job_search') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-search me-2"></i>Find Jobs
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Log In
+                    </a>
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Register
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <img src="{{ url_for('static', filename='images/inu-grow.png') }}" alt="INU Grow" class="img-fluid" style="max-height: 300px;">
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">How INU Grow Helps You</h2>
+        <p class="text-secondary">Our comprehensive suite of tools designed to optimize your job search process</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3 justify-content-center align-items-center" style="width: 80px; height: 80px;">
+                        <img src="{{ url_for('static', filename='images/cv-icon.png') }}" alt="CV Optimization" width="40" height="40">
+                    </div>
+                    <h3 class="h4 card-title">CV Optimization</h3>
+                    <p class="card-text text-secondary">Our AI analyzes your CV against job descriptions to ensure maximum ATS compatibility and keyword optimization.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3 justify-content-center align-items-center" style="width: 80px; height: 80px;">
+                        <img src="{{ url_for('static', filename='images/search-icon.png') }}" alt="Job Search" width="40" height="40">
+                    </div>
+                    <h3 class="h4 card-title">Job Search</h3>
+                    <p class="card-text text-secondary">Find and filter job listings that match your skills and experience with our intelligent job search tool.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3 d-inline-flex mb-3 justify-content-center align-items-center" style="width: 80px; height: 80px;">
+                        <img src="{{ url_for('static', filename='images/coach-icon.png') }}" alt="AI Career Coach" width="40" height="40">
+                    </div>
+                    <h3 class="h4 card-title">AI Career Coach</h3>
+                    <p class="card-text text-secondary">Get personalized career advice and interview preparation through our AI-powered chat assistant.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Social Proof Section -->
+<section class="py-5 bg-light rounded">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Users Love INU Grow</h2>
+        <p class="text-secondary">Join thousands of job seekers who have improved their application success rate</p>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <p class="card-text fst-italic">"INU Grow helped me optimize my CV and land interviews at 3 top tech companies. The ATS optimization made all the difference!"</p>
+                            <div class="d-flex align-items-center mt-3">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">JD</div>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">Jane Doe</h6>
+                                    <small class="text-secondary">Software Engineer</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <p class="card-text fst-italic">"The AI-powered job matching feature saved me countless hours of searching. I found my perfect role in just two days!"</p>
+                            <div class="d-flex align-items-center mt-3">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">MS</div>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">Michael Smith</h6>
+                                    <small class="text-secondary">Marketing Specialist</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star-half-alt text-warning"></i>
+                            </div>
+                            <p class="card-text fst-italic">"The cover letter generator saved me so much time and helped me personalize each application. The results speak for themselves!"</p>
+                            <div class="d-flex align-items-center mt-3">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">AL</div>
+                                <div class="ms-3">
+                                    <h6 class="mb-0">Amanda Lee</h6>
+                                    <small class="text-secondary">HR Professional</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5 text-center">
+    <div class="py-4">
+        <h2 class="fw-bold mb-3">Ready to Boost Your Job Search?</h2>
+        <p class="lead text-secondary mb-4">Join INU Grow today and take control of your career journey.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-rocket me-2"></i>Get Started Now
+            </a>
+            <a href="#" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-info-circle me-2"></i>Learn More
+            </a>
+        </div>
+    </div>
+</section>
 {% endblock %}

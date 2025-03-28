@@ -1,26 +1,228 @@
 {% extends "base.html" %}
 {% block title %}Job Search{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <h2>Job Search</h2>
-    <form method="POST">
-        <div class="form-group">
-            <label>Query</label>
-            <input type="text" name="query" class="form-control" required>
+<div class="row py-4">
+    <div class="col-lg-4 mb-4 mb-lg-0">
+        <div class="card border-0 shadow-sm sticky-lg-top" style="top: 20px; z-index: 1;">
+            <div class="card-body p-4">
+                <h2 class="card-title fw-bold mb-3">Find Your Next Role</h2>
+                <p class="text-secondary mb-4">Search for job opportunities that match your skills and interests</p>
+                
+                <form method="POST" class="needs-validation" novalidate>
+                    <div class="form-group mb-3">
+                        <label for="query" class="form-label fw-medium">What role are you looking for?</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="fas fa-briefcase text-secondary"></i>
+                            </span>
+                            <input type="text" name="query" id="query" class="form-control border-start-0" placeholder="Job title, keywords, or company" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="location" class="form-label fw-medium">Where?</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="fas fa-map-marker-alt text-secondary"></i>
+                            </span>
+                            <input type="text" name="location" id="location" class="form-control border-start-0" placeholder="City, state, or remote" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="job_type" class="form-label fw-medium">Job Type</label>
+                        <select name="job_type" id="job_type" class="form-select">
+                            <option value="all">All Types</option>
+                            <option value="full_time">Full Time</option>
+                            <option value="part_time">Part Time</option>
+                            <option value="contract">Contract</option>
+                            <option value="internship">Internship</option>
+                            <option value="remote">Remote</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="experience" class="form-label fw-medium">Experience Level</label>
+                        <select name="experience" id="experience" class="form-select">
+                            <option value="all">All Levels</option>
+                            <option value="entry">Entry Level</option>
+                            <option value="mid">Mid Level</option>
+                            <option value="senior">Senior Level</option>
+                            <option value="executive">Executive</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group mb-4">
+                        <label for="posted_date" class="form-label fw-medium">Posted Date</label>
+                        <select name="posted_date" id="posted_date" class="form-select">
+                            <option value="any">Any Time</option>
+                            <option value="1">Last 24 Hours</option>
+                            <option value="7">Last 7 Days</option>
+                            <option value="14">Last 14 Days</option>
+                            <option value="30">Last 30 Days</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        <i class="fas fa-search me-2"></i>Search Jobs
+                    </button>
+                </form>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Location</label>
-            <input type="text" name="location" class="form-control" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Search</button>
-    </form>
-    {% if jobs %}
-        <h3 class="mt-4">Results</h3>
-        <ul>
+    </div>
+    
+    <div class="col-lg-8">
+        {% if jobs %}
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold mb-0">{{ jobs|length }} Results</h3>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown">
+                        Sort by: Relevance
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                        <li><a class="dropdown-item active" href="#">Relevance</a></li>
+                        <li><a class="dropdown-item" href="#">Date (Newest)</a></li>
+                        <li><a class="dropdown-item" href="#">Salary (Highest)</a></li>
+                    </ul>
+                </div>
+            </div>
+            
             {% for job in jobs %}
-                <li>{{ job.title }} - {{ job.location }}</li>
+                <div class="card border-0 shadow-sm mb-4 job-item">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h4 class="fw-bold mb-1">{{ job.title }}</h4>
+                                <p class="text-secondary mb-2">{{ job.company }}</p>
+                            </div>
+                            <span class="badge bg-light text-primary py-2 px-3">New</span>
+                        </div>
+                        
+                        <div class="d-flex flex-wrap mb-3 text-secondary small">
+                            <div class="me-3 mb-2">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ job.location }}
+                            </div>
+                            <div class="me-3 mb-2">
+                                <i class="fas fa-briefcase me-1"></i>Full Time
+                            </div>
+                            <div class="me-3 mb-2">
+                                <i class="fas fa-money-bill-wave me-1"></i>$70K - $90K
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-clock me-1"></i>Posted 2 days ago
+                            </div>
+                        </div>
+                        
+                        <p class="card-text mb-3">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eget luctus metus, non feugiat lacus. Pellentesque at iaculis sem. Donec accumsan, sem id feugiat luctus, purus est efficitur lacus...</p>
+                        
+                        <div class="d-flex flex-wrap mb-3">
+                            <span class="skill-tag me-2 mb-2">JavaScript</span>
+                            <span class="skill-tag me-2 mb-2">React</span>
+                            <span class="skill-tag me-2 mb-2">Node.js</span>
+                            <span class="skill-tag me-2 mb-2">TypeScript</span>
+                        </div>
+                        
+                        <div class="d-flex flex-wrap justify-content-between align-items-center">
+                            <div class="d-flex align-items-center mb-2 mb-md-0">
+                                <div class="rounded-circle bg-light p-1 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <span class="fw-bold text-primary">{{ job.company|slice(0,1) }}</span>
+                                </div>
+                                <span class="ms-2 text-secondary">{{ job.company }}</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-outline-primary me-2">
+                                    <i class="far fa-bookmark me-1"></i>Save
+                                </button>
+                                <button class="btn btn-primary">
+                                    <i class="fas fa-external-link-alt me-1"></i>Apply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
-        </ul>
-    {% endif %}
+            
+            <nav aria-label="Job search pagination">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Previous</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        {% else %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-search fa-3x text-secondary mb-3"></i>
+                        <h3 class="fw-bold">No Jobs Found</h3>
+                        <p class="text-secondary">Try adjusting your search criteria or explore our job recommendations.</p>
+                    </div>
+                    <a href="{{ url_for('job_search') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-sync-alt me-2"></i>Reset Search
+                    </a>
+                </div>
+            </div>
+            
+            <div class="mt-5">
+                <h3 class="fw-bold mb-4">Popular Job Categories</h3>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4 text-center">
+                                <i class="fas fa-laptop-code fa-2x text-primary mb-3"></i>
+                                <h4 class="h5 fw-bold">Technology</h4>
+                                <p class="card-text text-secondary small mb-3">Software engineering, data science, IT support, and more.</p>
+                                <a href="#" class="btn btn-sm btn-outline-primary">Explore</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4 text-center">
+                                <i class="fas fa-chart-line fa-2x text-primary mb-3"></i>
+                                <h4 class="h5 fw-bold">Business</h4>
+                                <p class="card-text text-secondary small mb-3">Marketing, sales, finance, operations, and administration.</p>
+                                <a href="#" class="btn btn-sm btn-outline-primary">Explore</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-4 text-center">
+                                <i class="fas fa-hospital fa-2x text-primary mb-3"></i>
+                                <h4 class="h5 fw-bold">Healthcare</h4>
+                                <p class="card-text text-secondary small mb-3">Medical professionals, technicians, support staff, and more.</p>
+                                <a href="#" class="btn btn-sm btn-outline-primary">Explore</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
 </div>
+
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms).forEach(function(form) {
+            form.addEventListener('submit', function(event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
 {% endblock %}
