@@ -136,7 +136,7 @@ def login():
         user = User.query.filter_by(username=username).first()
         if user and check_password_hash(user.password, password):
             login_user(user)
-            return redirect(url_for('analyze'))
+            return redirect(url_for('index'))
         flash('Invalid username or password')
     return render_template('login.html')
 
@@ -146,6 +146,86 @@ def logout():
     session.clear()
     logout_user()
     return redirect(url_for('index'))
+
+@app.route('/upload_cv_dashboard', methods=['POST'])
+@login_required
+def upload_cv_dashboard():
+    if 'cv_file' not in request.files:
+        flash('No file part in request', 'danger')
+        return redirect(url_for('index'))
+
+    file = request.files['cv_file']
+    if file.filename == '':
+        flash('No file selected', 'danger')
+        return redirect(url_for('index'))
+
+    if not allowed_file(file.filename):
+        flash('Invalid file type. Only PDF or DOCX allowed.', 'danger')
+        return redirect(url_for('index'))
+
+    user_cvs = CV.query.filter_by(user_id=current_user.id).all()
+    if len(user_cvs) >= 5:
+        flash('You can only save up to 5 CVs.', 'warning')
+        return redirect(url_for('index'))
+
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    file.save(filepath)
+
+    # ✅ Add duplicate filename check
+    existing_cv_by_name = CV.query.filter_by(user_id=current_user.id, filename=file.filename).first()
+    if existing_cv_by_name:
+        flash("You have already uploaded a CV with this filename.", "warning")
+        return redirect(url_for('index'))
+
+    # ✅ Extract text
+    if file.filename.endswith('.pdf'):
+        cv_text = extract_text_from_pdf(filepath)
+    else:
+        cv_text = extract_text_from_docx(filepath)
+
+    if not cv_text:
+        flash('Failed to extract text from the CV.', 'danger')
+        return redirect(url_for('index'))
+
+    # ✅ Add duplicate content check
+    existing_cv_by_content = CV.query.filter_by(user_id=current_user.id, content=cv_text).first()
+    if existing_cv_by_content:
+        flash("This CV has already been uploaded before.", "warning")
+        return redirect(url_for('index'))
+
+    # Extract text and parse
+    if file.filename.endswith('.pdf'):
+        cv_text = extract_text_from_pdf(filepath)
+    else:
+        cv_text = extract_text_from_docx(filepath)
+
+    if not cv_text:
+        flash('Failed to extract text from the CV.', 'danger')
+        return redirect(url_for('index'))
+
+    # Use your hybrid parser
+    from cv_parser_utils import parse_and_enhance_cv
+    result = parse_and_enhance_cv(cv_text)
+    parsed_data = result["parsed_data"]
+    skills = result["enhanced_skills"]
+
+    new_cv = CV(
+        user_id=current_user.id,
+        filename=file.filename,
+        content=cv_text,
+        skills=",".join(skills),
+        summary=parsed_data.get("summary", "")
+    )
+    db.session.add(new_cv)
+    db.session.commit()
+
+    # Add CV to semantic index
+    
+    rag.add_document(cv_text, doc_id=str(new_cv.id))
+
+    flash("CV uploaded and parsed successfully.", "success")
+    return redirect(url_for('index'))
+
 
 @app.route('/analyze', methods=['GET', 'POST'])
 @login_required
@@ -268,16 +348,18 @@ def analyze():
 def delete_cv(cv_id):
     cv = CV.query.filter_by(id=cv_id, user_id=current_user.id).first()
     if not cv:
-        flash('CV not found.')
-        return redirect(url_for('analyze'))
+        flash('CV not found.', 'danger')
+        return redirect(request.referrer or url_for('index'))  
+
     try:
         db.session.delete(cv)
         db.session.commit()
-        flash('CV deleted successfully.')
+        flash('CV deleted successfully.', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Error deleting CV: {e}')
-    return redirect(url_for('analyze'))
+        flash(f'Error deleting CV: {e}', 'danger')
+
+    return redirect(request.referrer or url_for('index'))  
 
 @app.route('/preview_cv/<int:cv_id>')
 @login_required
