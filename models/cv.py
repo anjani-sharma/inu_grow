@@ -8,6 +8,7 @@ class CV(db.Model):
     skills = db.Column(db.Text)
     summary = db.Column(db.Text)
     hyperlinks = db.Column(db.Text)
+    generated_resume = db.Column(db.Text, nullable=True)
     
     def __repr__(self):
         return f'<CV {self.filename}>'

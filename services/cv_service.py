@@ -179,27 +179,36 @@ class CVService:
         """
         Generate a formatted resume based on CV data and template
         """
-        # Get the parsed CV data
+        import json
+
+        
+        # Re-parse CV data
         extra_links = json.loads(cv.hyperlinks or "[]")
         parsed_data = CVService.get_parsed_data_for_resume(cv, extra_links=extra_links)
 
-        # default to 'executive' if none provided
-        template_id = template_id or 'executive'
-        
-        # Generate formatted resume based on template
+        # Generate resume by template
         if template_id == 'modern':
-            return CVService.generate_modern_template(parsed_data, customizations)
+            html = CVService.generate_modern_template(parsed_data, customizations)
         elif template_id == 'professional':
-            return CVService.generate_professional_template(parsed_data, customizations)
+            html = CVService.generate_professional_template(parsed_data, customizations)
         elif template_id == 'technical':
-            return CVService.generate_technical_template(parsed_data, customizations)
+            html = CVService.generate_technical_template(parsed_data, customizations)
         else:
-            # Default to executive template
-            return CVService.generate_executive_template(parsed_data)
+            # Executive template (default/fallback)
+            html = CVService.generate_executive_template(parsed_data)
+
+        return html
+     
         
-    
     @staticmethod
     def generate_executive_template(parsed_data):
+        """
+        Generate a resume in the executive style inspired by Anjani Sharma's resume design.
+        Returns styled HTML for display or PDF export.
+        """
+        from services.llm_service import LLMService
+        import json
+
         contact_info = parsed_data.get('contact_info', {})
         summary = parsed_data.get('summary', '')
         experience = parsed_data.get('experience', [])
@@ -207,52 +216,132 @@ class CVService:
         skills = parsed_data.get('skills', [])
         certifications = parsed_data.get('certifications', [])
         projects = parsed_data.get('projects', [])
+        competencies = parsed_data.get('core_competencies', [])
 
-        content = []
-        content.append(contact_info.get('name', 'YOUR NAME').upper())
-        content.append("Senior Data Science & AI Leader | Generative AI, Machine Learning, Python, People leader")
-        content.append(f"Ph# {contact_info.get('phone', '')}, email: {contact_info.get('email', '')}, LinkedIn: {contact_info.get('linkedin', '')}   Project Repository: {contact_info.get('github', '')}")
-        content.append("")
+        # Generate headline with LLM if not present
+        headline = parsed_data.get('headline', '')
+        if not headline:
+            prompt = f"""
+            Based on the following resume summary and experience, generate a concise and impactful professional tagline for the top of a resume (e.g., 'Senior AI & Data Science Leader | ML, GenAI, Python, People Leadership').
 
-        content.append("Professional Summary")
-        content.append(summary)
-        content.append("")
+            Summary:
+            {summary}
 
-        content.append("Core Competencies")
-        for skill in skills:
-            content.append(f"• {skill}")
-        content.append("")
+            Experience:
+            {', '.join(exp.get('title', '') + ' at ' + exp.get('company', '') for exp in experience)}
 
-        content.append("Professional Experience")
+            Return only the tagline.
+            """
+            try:
+                response = LLMService.invoke(prompt)
+                headline = response.content.strip()
+            except Exception as e:
+                print(f"[Headline Generation Error] {e}")
+                headline = ""
+
+        # Generate core competencies if not provided
+        if not competencies:
+            try:
+                core_prompt = f"""
+                Extract 6–8 core competencies from the following CV details. Format as a list with title and one-line description.
+
+                Summary:
+                {summary}
+
+                Experience:
+                {', '.join(exp.get('title', '') + ' at ' + exp.get('company', '') for exp in experience)}
+
+                Return JSON:
+                ["Leadership: Team development and mentoring", "ML Engineering: Production-ready model deployment", ...]
+                """
+                comp_response = LLMService.invoke(core_prompt)
+                raw_content = comp_response.content.strip()
+                print("[DEBUG] Competency LLM raw output:", raw_content)
+                if raw_content.startswith('['):
+                    competencies = json.loads(raw_content)
+                else:
+                    competencies = []
+            except Exception as e:
+                print(f"[Competency Generation Error] {e}")
+                competencies = []
+
+        parsed_data['core_competencies'] = competencies  # ✅ Save for reuse
+
+        def section_header(title):
+            return f"<h2 style='font-family: Georgia; font-size: 12pt; color: #333333; font-weight: bold; border-bottom: 2px solid #333333; padding-bottom: 2px;'>{title}</h2>"
+
+        html = []
+
+        # Header
+        html.append(f"<h1 style='font-family: Georgia; font-size: 14pt; color: #333333; text-align: center;'>{contact_info.get('name', 'YOUR NAME').upper()}</h1>")
+        html.append(f"<p style='font-family: Georgia; font-size: 11pt; color: #444; text-align: center;'>{headline}</p>")
+        html.append(f"<p style='font-family: Times New Roman; font-size: 10pt; color: #374246;'>Ph# {contact_info.get('phone', '')}, Email: {contact_info.get('email', '')}<br>LinkedIn: {contact_info.get('linkedin', '')} | GitHub: {contact_info.get('github', '')}</p>")
+
+        # Summary
+        html.append(section_header("Professional Summary"))
+        html.append(f"<p style='font-family: Times New Roman; font-size: 10pt; color: #6F7878;'>{summary or 'Summary generated based on your CV will appear here.'}</p>")
+
+        # Core Competencies
+        if competencies:
+            html.append(section_header("Core Competencies"))
+            html.append("<ul style='font-family: Times New Roman; font-size: 10pt; color: #6F7878;'>")
+            for item in competencies:
+                if ':' in item:
+                    title, desc = item.split(':', 1)
+                    html.append(f"<li><strong>{title.strip()}:</strong> {desc.strip()}</li>")
+                else:
+                    html.append(f"<li>{item}</li>")
+            html.append("</ul>")
+
+        # Experience
+        html.append(section_header("Professional Experience"))
         for exp in experience:
-            content.append(exp.get('company', ''))
-            content.append(f"{exp.get('title', '')}                                                                  {exp.get('start_date', '')} – {exp.get('end_date', '')}")
-            for achievement in exp.get('achievements', []):
-                content.append(f"• {achievement}")
-            content.append("")
+            html.append(f"<p style='font-family: Georgia; font-size: 10pt; font-weight: bold; color: #333333;'>{exp.get('company', '')}</p>")
+            html.append(f"<p style='font-family: Times New Roman; font-size: 10pt; color: #6F7878;'>{exp.get('title', '')} | {exp.get('start_date', '')} – {exp.get('end_date', '')}</p>")
+            html.append("<ul style='font-family: Times New Roman; font-size: 10pt; color: #6F7878;'>")
+            for ach in exp.get('achievements', []):
+                html.append(f"<li>{ach}</li>")
+            html.append("</ul>")
 
-        content.append("Projects")
-        for proj in projects:
-            content.append(f"• {proj.get('name', '')}: {proj.get('description', '')}")
-            content.append("")
+        # Projects
+        if projects:
+            html.append(section_header("Projects"))
+            html.append("<ul style='font-family: Times New Roman; font-size: 10pt; color: #6F7878;'>")
+            for proj in projects:
+                html.append(f"<li><strong>{proj.get('name', '')}</strong>: {proj.get('description', '')}</li>")
+            html.append("</ul>")
 
-        content.append("Skills")
-        for skill in skills:
-            content.append(f"• {skill}")
-        content.append("")
+        # Skills - formatted by category
+        html.append(section_header("Skills"))
+        categorized_skills = parsed_data.get("categorized_skills", {})
+        if categorized_skills:
+            html.append("<ul style='font-family: Times New Roman; font-size: 10pt; color: #6F7878; list-style: none; padding-left: 0;'>")
+            for category, skill_list in categorized_skills.items():
+                html.append(f"<li><strong>{category}:</strong> {', '.join(skill_list)}</li>")
+            html.append("</ul>")
+        else:
+            html.append("<ul style='font-family: Times New Roman; font-size: 10pt; color: #6F7878;'>")
+            for skill in sorted(set(skills)):
+                html.append(f"<li>{skill}</li>")
+            html.append("</ul>")
 
-        content.append("Education")
+        # Education
+        html.append(section_header("Education"))
         for edu in education:
-            content.append(edu.get('degree', ''))
-            content.append(edu.get('institution', ''))
-            content.append(f"{edu.get('start_date', '')} – {edu.get('end_date', '')}")
-            content.append("")
+            html.append(f"<p style='font-family: Georgia; font-size: 10pt; font-weight: bold;'>{edu.get('degree', '')}</p>")
+            html.append(f"<p style='font-family: Times New Roman; font-size: 10pt; color: #6F7878;'>{edu.get('institution', '')}<br>{edu.get('start_date', '')} – {edu.get('end_date', '')}</p>")
 
-        content.append("Certifications")
-        for cert in certifications:
-            content.append(f"• {cert}")
+        # Certifications
+        if certifications:
+            html.append(section_header("Certifications"))
+            html.append("<ul style='font-family: Times New Roman; font-size: 10pt; color: #6F7878;'>")
+            for cert in certifications:
+                html.append(f"<li>{cert}</li>")
+            html.append("</ul>")
 
-        return "\n".join(content)
+        return "\n".join(html)
+
+
 
 
             

@@ -48,6 +48,7 @@ def create_app(config_object=Config):
     app.route('/upload_cv_dashboard', methods=['POST'])(upload_cv_dashboard)
     app.route('/delete_cv/<int:cv_id>', methods=['POST'])(delete_cv)
     app.route('/preview_cv/<int:cv_id>')(preview_cv)
+  
     
     # Analysis routes
     app.route('/analyze', methods=['GET', 'POST'])(analyze)

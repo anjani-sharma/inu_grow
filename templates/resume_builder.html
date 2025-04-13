@@ -47,6 +47,11 @@
                 </div>
             </div>
 
+            <!-- Refresh Button -->
+            <div class="text-end mb-2">
+            
+            </div>
+
             <!-- Customization Panel (hidden until template selected) -->
             <div class="card mb-4 d-none" id="customizationPanel">
                 <div class="card-header">
@@ -87,6 +92,10 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="skillsToggle" checked>
                                 <label class="form-check-label" for="skillsToggle">Skills</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="competenciesToggle" checked>
+                                <label class="form-check-label" for="competenciesToggle">Competencies</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="projectsToggle" checked>
@@ -250,6 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
         experience: document.getElementById('experienceToggle'),
         education: document.getElementById('educationToggle'),
         skills: document.getElementById('skillsToggle'),
+        competencies: document.getElementById('competenciesToggle'),
         projects: document.getElementById('projectsToggle'),
         certifications: document.getElementById('certificationsToggle')
     };
@@ -551,6 +561,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update preview
             formatPreviewAsHtml(data.formattedResume);
             
+                        
             // Store download URL
             downloadUrl = data.downloadUrl;
             
