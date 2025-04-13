@@ -35,7 +35,7 @@
             <a href="{{ url_for('analyze') }}" class="{% if request.endpoint == 'analyze' %}active{% endif %}">
                 <i class="fas fa-file-alt"></i> Analyze CV
             </a>
-            <a href="#resume-builder" class="{% if request.endpoint == 'resume_builder' %}active{% endif %}">
+            <a href="{{ url_for('resume_builder') }}" class="{% if request.endpoint == 'resume_builder' %}active{% endif %}">
                 <i class="fas fa-edit"></i> Resume Builder
             </a>
             

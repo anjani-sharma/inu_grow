@@ -530,14 +530,205 @@
                             <h3 class="h5 fw-bold mb-0">
                                 <i class="fas fa-file-alt text-primary me-2"></i>Optimized CV
                             </h3>
-                            <a href="{{ url_for('download_optimized_cv', content=optimized_cv) }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-download me-2"></i>Download
-                            </a>
+                            
+                            <div class="d-flex align-items-center">
+                                {% if cv_id %}
+                                <!-- Template selector dropdown -->
+                                <div class="dropdown me-2">
+                                    <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="templateDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Choose Template
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="templateDropdown">
+                                        {% for id, template in templates.items() %}
+                                            <li><a class="dropdown-item template-select" href="#" data-template="{{ id }}">{{ template.name }}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                
+                                <!-- Download buttons -->
+                                <a href="{{ url_for('download_optimized_cv', content=optimized_cv) }}" class="btn btn-primary btn-sm default-download">
+                                    <i class="fas fa-download me-2"></i>Download
+                                </a>
+                                <a href="#" id="templateDownloadBtn" class="btn btn-success btn-sm d-none template-download">
+                                    <i class="fas fa-download me-2"></i>Download Formatted
+                                </a>
+                                {% else %}
+                                <a href="{{ url_for('download_optimized_cv', content=optimized_cv) }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-download me-2"></i>Download
+                                </a>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     <div class="card-body p-4">
-                        <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ optimized_cv }}</pre>
+                        <div id="cvPreviewContainer">
+                            <pre class="bg-light p-3 rounded" style="white-space: pre-wrap;">{{ optimized_cv }}</pre>
+                        </div>
                     </div>
+                    
+                    {% if cv_id %}
+                    <!-- Template preview functionality -->
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Track currently selected template
+                            let currentTemplate = null;
+                            let downloadUrl = null;
+                            
+                            // Get elements
+                            const templateSelects = document.querySelectorAll('.template-select');
+                            const defaultDownloadBtn = document.querySelector('.default-download');
+                            const templateDownloadBtn = document.querySelector('.template-download');
+                            const cvPreviewContainer = document.getElementById('cvPreviewContainer');
+                            
+                            // Template selection
+                            templateSelects.forEach(select => {
+                                select.addEventListener('click', function(e) {
+                                    e.preventDefault();
+                                    
+                                    // Get template ID
+                                    currentTemplate = this.getAttribute('data-template');
+                                    
+                                    // Update dropdown button text
+                                    document.getElementById('templateDropdown').textContent = this.textContent;
+                                    
+                                    // Get formatted CV preview
+                                    getFormattedCVPreview(currentTemplate);
+                                });
+                            });
+                            
+                            // Get formatted CV preview
+                            function getFormattedCVPreview(templateId) {
+                                // Show loading indicator
+                                cvPreviewContainer.innerHTML = '<div class="text-center my-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><p class="mt-3">Generating formatted CV preview...</p></div>';
+                                
+                                // Call API
+                                fetch('{{ url_for("get_formatted_cv") }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        template: templateId,
+                                        cv_id: {{ cv_id|default(0) }},
+                                        optimized_content: `{{ optimized_cv|safe }}`
+                                    })
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.error) {
+                                        cvPreviewContainer.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                                        return;
+                                    }
+                                    
+                                    // Update preview
+                                    cvPreviewContainer.innerHTML = `<div class="bg-light p-3 rounded resume-preview" style="white-space: pre-wrap;">${formatPreviewAsHtml(data.formattedResume)}</div>`;
+                                    
+                                    // Update download button
+                                    downloadUrl = data.downloadUrl;
+                                    templateDownloadBtn.href = downloadUrl;
+                                    templateDownloadBtn.classList.remove('d-none');
+                                    defaultDownloadBtn.classList.add('d-none');
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    cvPreviewContainer.innerHTML = '<div class="alert alert-danger">Failed to generate formatted CV preview. Please try again.</div>';
+                                });
+                            }
+                            
+                            // Format preview as HTML
+                            function formatPreviewAsHtml(text) {
+                                // Split the text into lines
+                                const lines = text.split('\n');
+                                let html = '';
+                                let inSkillsSection = false;
+                                let inList = false;
+                                
+                                // Process the first line as the name (assuming it's the name)
+                                if (lines.length > 0) {
+                                    html += `<h1 style="font-size: 24px; text-align: center; margin-top: 0; margin-bottom: 5px; color: #2c3e50;">${lines[0]}</h1>`;
+                                }
+                                
+                                // Process the second line as contact info
+                                if (lines.length > 1) {
+                                    html += `<div style="text-align: center; margin-bottom: 20px; font-size: 14px; color: #555;">${lines[1]}</div>`;
+                                }
+                                
+                                // Process the rest of the lines
+                                for (let i = 2; i < lines.length; i++) {
+                                    const line = lines[i].trim();
+                                    
+                                    // Skip empty lines
+                                    if (!line) {
+                                        if (inList) {
+                                            html += '</ul>';
+                                            inList = false;
+                                        }
+                                        continue;
+                                    }
+                                    
+                                    // Check if it's a section header
+                                    if (line.toUpperCase() === line && line.length > 3) {
+                                        if (inList) {
+                                            html += '</ul>';
+                                            inList = false;
+                                        }
+                                        
+                                        // Section header
+                                        html += `<h2 style="font-size: 16px; text-transform: uppercase; margin-top: 15px; margin-bottom: 10px; color: #2980b9; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px;">${line}</h2>`;
+                                        
+                                        // Check if we're entering the skills section
+                                        inSkillsSection = line.includes('SKILLS');
+                                        continue;
+                                    }
+                                    
+                                    // If we're in the skills section, format as bullet points
+                                    if (inSkillsSection) {
+                                        // Format skills with bullets
+                                        const skills = line.split('•').map(s => s.trim()).filter(s => s);
+                                        
+                                        if (skills.length > 0) {
+                                            if (!inList) {
+                                                html += '<ul style="display: flex; flex-wrap: wrap; gap: 8px; list-style-type: none; margin-left: 0; padding-left: 0;">';
+                                                inList = true;
+                                            }
+                                            
+                                            skills.forEach(skill => {
+                                                html += `<li style="background-color: #f8f9fa; border-radius: 3px; padding: 2px 8px; font-size: 14px; display: inline-block; margin-bottom: 5px;">${skill}</li>`;
+                                            });
+                                        }
+                                    } 
+                                    // If line starts with a bullet point or asterisk
+                                    else if (line.startsWith('•') || line.startsWith('*') || line.startsWith('-')) {
+                                        if (!inList) {
+                                            html += '<ul style="margin-left: 20px; margin-bottom: 10px; padding-left: 0;">';
+                                            inList = true;
+                                        }
+                                        
+                                        // Remove the bullet point character and trim
+                                        const content = line.substring(1).trim();
+                                        html += `<li style="margin-bottom: 5px; list-style-type: disc;">${content}</li>`;
+                                    } 
+                                    // Regular paragraph
+                                    else {
+                                        if (inList) {
+                                            html += '</ul>';
+                                            inList = false;
+                                        }
+                                        
+                                        html += `<p style="margin-bottom: 10px;">${line}</p>`;
+                                    }
+                                }
+                                
+                                // Close any open list
+                                if (inList) {
+                                    html += '</ul>';
+                                }
+                                
+                                return html;
+                            }
+                        });
+                    </script>
+                    {% endif %}
                 </div>
             </div>
             

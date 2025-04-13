@@ -1,0 +1,74 @@
+digraph "INU Grow App Architecture" {
+	graph [fontcolor="#2D3436" fontname="Sans-Serif" fontsize=15 label="INU Grow App Architecture" nodesep=0.60 pad=2.0 rankdir=LR ranksep=0.75 splines=ortho]
+	node [fixedsize=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 height=1.4 imagescale=true labelloc=b shape=box style=rounded width=1.4]
+	edge [color="#7B8894"]
+	subgraph "cluster_Web Layer" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="Web Layer" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		eeaed634fd9341028cfa7b9ab24b6f24 [label="Flask App" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/framework/flask.png" shape=none]
+		"74a265adfeb5453785acfbd557bbee22" [label=Templates height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+	}
+	subgraph cluster_Authentication {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label=Authentication labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"7b93a97a9ddc43f58370b42868c8c6eb" [label="Auth Service" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+		"71ff13318fbc42eaa9a90a81867cf04a" [label="User Model" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+	}
+	subgraph "cluster_CV Management" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="CV Management" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"8db3b935b3ab47b595f1ac792ed1b62c" [label="CV Controller" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+		e80e9b9ad7464a4eb4e9e5a694e56ebc [label="CV Service" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+		"6e6334ac998345e0bfd610864e88fa63" [label="CV Model" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+		d11128ffc2d7433289aa3303dd35e932 [label="CV Parser" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+	}
+	subgraph "cluster_Job Management" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="Job Management" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"5d9957bf9e444ecb93bc502664504b4d" [label="Job Controller" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+		"488cb0b2933a484399dd576e56920041" [label="Job Service" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+		b43b9468928345fa9bfa4f618075938a [label="Job Model" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+	}
+	subgraph cluster_Analysis {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label=Analysis labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"4eede3f40e2e42a3a0655b2d20b7d046" [label="Analysis Service" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+		"411e14f5facd4c079faf9cf138a60a78" [label="Document Service" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+	}
+	subgraph "cluster_AI Services" {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label="AI Services" labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"09616b28029340d4be3c33ecc27dddee" [label="LLM Service" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+		a4cde30ac1134f3797595f4cdd6198a9 [label="RAG Service" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/programming/language/python.png" shape=none]
+	}
+	subgraph cluster_Storage {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label=Storage labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		"42ca22ed424645b2be34aa4e94d1405f" [label="SQLite DB" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/onprem/database/postgresql.png" shape=none]
+		"2ba32de39add4aa8b1b7eefc41ce1ab8" [label="CV Uploads" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/generic/storage/storage.png" shape=none]
+	}
+	subgraph cluster_Workflow {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label=Workflow labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		c372b63b3c0f426982c08569aa96d9b9 [label="LangGraph Workflow" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/oci/governance/compartments.png" shape=none]
+	}
+	subgraph cluster_Chat {
+		graph [bgcolor="#E5F5FD" fontname="Sans-Serif" fontsize=12 label=Chat labeljust=l pencolor="#AEB6BE" rankdir=LR shape=box style=rounded]
+		aa868301f7354e05a528633153aab736 [label="CV Chat" height=1.9 image="/Users/anjanisharma/projects/inu_grow_app/venv/lib/python3.13/site-packages/resources/saas/chat/discord.png" shape=none]
+	}
+	eeaed634fd9341028cfa7b9ab24b6f24 -> "74a265adfeb5453785acfbd557bbee22" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	eeaed634fd9341028cfa7b9ab24b6f24 -> "7b93a97a9ddc43f58370b42868c8c6eb" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"7b93a97a9ddc43f58370b42868c8c6eb" -> "71ff13318fbc42eaa9a90a81867cf04a" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"71ff13318fbc42eaa9a90a81867cf04a" -> "42ca22ed424645b2be34aa4e94d1405f" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	eeaed634fd9341028cfa7b9ab24b6f24 -> "8db3b935b3ab47b595f1ac792ed1b62c" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"8db3b935b3ab47b595f1ac792ed1b62c" -> e80e9b9ad7464a4eb4e9e5a694e56ebc [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	e80e9b9ad7464a4eb4e9e5a694e56ebc -> "6e6334ac998345e0bfd610864e88fa63" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"6e6334ac998345e0bfd610864e88fa63" -> "42ca22ed424645b2be34aa4e94d1405f" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	e80e9b9ad7464a4eb4e9e5a694e56ebc -> d11128ffc2d7433289aa3303dd35e932 [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	d11128ffc2d7433289aa3303dd35e932 -> "2ba32de39add4aa8b1b7eefc41ce1ab8" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	e80e9b9ad7464a4eb4e9e5a694e56ebc -> "411e14f5facd4c079faf9cf138a60a78" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	eeaed634fd9341028cfa7b9ab24b6f24 -> "5d9957bf9e444ecb93bc502664504b4d" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"5d9957bf9e444ecb93bc502664504b4d" -> "488cb0b2933a484399dd576e56920041" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"488cb0b2933a484399dd576e56920041" -> b43b9468928345fa9bfa4f618075938a [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	b43b9468928345fa9bfa4f618075938a -> "42ca22ed424645b2be34aa4e94d1405f" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"8db3b935b3ab47b595f1ac792ed1b62c" -> "4eede3f40e2e42a3a0655b2d20b7d046" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"5d9957bf9e444ecb93bc502664504b4d" -> "4eede3f40e2e42a3a0655b2d20b7d046" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"4eede3f40e2e42a3a0655b2d20b7d046" -> "09616b28029340d4be3c33ecc27dddee" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"4eede3f40e2e42a3a0655b2d20b7d046" -> "411e14f5facd4c079faf9cf138a60a78" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"4eede3f40e2e42a3a0655b2d20b7d046" -> c372b63b3c0f426982c08569aa96d9b9 [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	aa868301f7354e05a528633153aab736 -> a4cde30ac1134f3797595f4cdd6198a9 [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	a4cde30ac1134f3797595f4cdd6198a9 -> "09616b28029340d4be3c33ecc27dddee" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	a4cde30ac1134f3797595f4cdd6198a9 -> "6e6334ac998345e0bfd610864e88fa63" [dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+}

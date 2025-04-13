@@ -43,6 +43,9 @@ class AnalysisService:
             db.session.rollback()
             print(f"Error saving job description: {e}")
         
+        # Track CV ID to return in results
+        cv_id = None
+        
         # Save CV if needed (for new uploads)
         if save_cv and cv_filename:
             try:
@@ -55,13 +58,14 @@ class AnalysisService:
                 )
                 db.session.add(new_cv)
                 db.session.commit()
+                cv_id = new_cv.id
             except Exception as e:
                 db.session.rollback()
                 print(f"Error saving CV: {e}")
         
         # Process results for view
         analysis_results = result['analysis_results']
-        return {
+        response = {
             "matches": result['matches'],
             "match_percentage": result['match_percentage'],
             "optimized_cv": result['optimized_cv'],
@@ -79,5 +83,11 @@ class AnalysisService:
             "missing_soft_keywords": [kw for kw in analysis_results['keyword_analysis']['missing_keywords'] 
                                     if kw in result['job_soft_skills']],
             "cv_skill_freq": analysis_results['keyword_analysis']['cv_skill_freq'],
-            "job_skill_freq": analysis_results['keyword_analysis']['job_skill_freq']
+            "job_skill_freq": analysis_results['keyword_analysis']['job_skill_freq'],
         }
+        
+        # Add CV ID if available
+        if cv_id:
+            response["cv_id"] = cv_id
+            
+        return response

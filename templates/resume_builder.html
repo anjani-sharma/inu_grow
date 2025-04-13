@@ -1,0 +1,671 @@
+{% extends "base.html" %}
+{% block title %}Resume Builder{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Resume Builder</h1>
+    
+    <div class="row">
+        <!-- CV Selection Panel -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Select Your CV</h5>
+                </div>
+                <div class="card-body">
+                    {% if cvs %}
+                        <div class="list-group">
+                            {% for cv in cvs %}
+                                <button type="button" class="list-group-item list-group-item-action cv-select-btn" data-cv-id="{{ cv.id }}">
+                                    {{ cv.filename }}
+                                </button>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>You haven't uploaded any CVs yet.</p>
+                        <a href="{{ url_for('analyze') }}" class="btn btn-primary">Upload a CV</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Template Selection (hidden until CV selected) -->
+            <div class="card mb-4 d-none" id="templateSelector">
+                <div class="card-header">
+                    <h5>Choose a Template</h5>
+                </div>
+                <div class="card-body">
+                    <div class="template-cards">
+                        {% for id, template in templates.items() %}
+                            <div class="card mb-2 template-card" data-template="{{ id }}">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ template.name }}</h6>
+                                    <p class="card-text">{{ template.description }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customization Panel (hidden until template selected) -->
+            <div class="card mb-4 d-none" id="customizationPanel">
+                <div class="card-header">
+                    <h5>Customize Resume</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Summary Customization -->
+                    <div class="mb-3">
+                        <label for="customSummary" class="form-label">Professional Summary</label>
+                        <textarea class="form-control" id="customSummary" rows="3"></textarea>
+                        <button class="btn btn-sm btn-outline-secondary mt-1" id="aiImproveBtn" data-section="summary">
+                            <i class="fas fa-magic"></i> AI Improve
+                        </button>
+                    </div>
+
+                    <!-- Skills -->
+                    <div class="mb-3">
+                        <label class="form-label">Skills Highlight</label>
+                        <div id="skillsContainer" class="d-flex flex-wrap gap-2 mb-2"></div>
+                    </div>
+
+                    <!-- Section Visibility -->
+                    <div class="mb-3">
+                        <label class="form-label">Section Visibility</label>
+                        <div id="sectionToggles">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="summaryToggle" checked>
+                                <label class="form-check-label" for="summaryToggle">Summary</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="experienceToggle" checked>
+                                <label class="form-check-label" for="experienceToggle">Experience</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="educationToggle" checked>
+                                <label class="form-check-label" for="educationToggle">Education</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="skillsToggle" checked>
+                                <label class="form-check-label" for="skillsToggle">Skills</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="projectsToggle" checked>
+                                <label class="form-check-label" for="projectsToggle">Projects</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="certificationsToggle" checked>
+                                <label class="form-check-label" for="certificationsToggle">Certifications</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <button id="generateBtn" class="btn btn-primary w-100">Generate Resume</button>
+                    
+                    <!-- Download Button -->
+                    <a id="downloadBtn" class="btn btn-success w-100 mt-2 d-none" download>
+                        <i class="fas fa-file-download"></i> Download as PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Resume Preview</h5>
+                    <div id="previewControls" class="d-none">
+                        <button id="zoomInBtn" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                        <button id="zoomOutBtn" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="resumePreview" class="resume-preview">
+                        <div class="text-center mt-5">
+                            <p>Select a CV from the left panel to start building your resume.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for AI Improvement -->
+<div class="modal fade" id="aiModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">AI Improvement</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="aiContent" class="form-label">Content to Improve</label>
+                    <textarea class="form-control" id="aiContent" rows="5"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="aiGoal" class="form-label">Improvement Goal</label>
+                    <select class="form-select" id="aiGoal">
+                        <option value="Make it more professional and impactful">More Professional & Impactful</option>
+                        <option value="Optimize for ATS scanning">Optimize for ATS</option>
+                        <option value="Make it more concise and focused">More Concise & Focused</option>
+                        <option value="Emphasize achievements and results">Emphasize Achievements</option>
+                        <option value="Highlight leadership qualities">Highlight Leadership</option>
+                    </select>
+                </div>
+                <div id="aiLoading" class="d-none">
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <p class="text-center mt-2">Improving your content with AI...</p>
+                </div>
+                <div id="aiResult" class="d-none">
+                    <label class="form-label">Improved Content</label>
+                    <div class="p-3 bg-light rounded">
+                        <div id="aiImprovedContent"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="aiImproveAction">Improve</button>
+                <button type="button" class="btn btn-success d-none" id="aiApplyBtn">Apply Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .resume-preview {
+        font-family: 'Arial', sans-serif;
+        background-color: white;
+        border: 1px solid #ddd;
+        padding: 25px;
+        height: 700px;
+        overflow-y: auto;
+        line-height: 1.5;
+        color: #333;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        transform-origin: top left;
+    }
+    .template-card {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .template-card:hover {
+        border-color: #007bff;
+    }
+    .template-card.active {
+        border-color: #007bff;
+        background-color: #f8f9fa;
+    }
+    .skill-tag {
+        display: inline-block;
+        background-color: #f0f0f0;
+        padding: 5px 10px;
+        border-radius: 20px;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.2s;
+    }
+    .skill-tag.selected {
+        background-color: #007bff;
+        color: white;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // State
+    let currentCvId = null;
+    let currentTemplate = 'executive';
+    let parsedData = null;
+    let highlightedSkills = [];
+    let excludedSections = [];
+    let scale = 1.0;
+    let downloadUrl = '';
+    
+    // Elements
+    const templateSelector = document.getElementById('templateSelector');
+    const customizationPanel = document.getElementById('customizationPanel');
+    const previewControls = document.getElementById('previewControls');
+    const resumePreview = document.getElementById('resumePreview');
+    const cvSelectBtns = document.querySelectorAll('.cv-select-btn');
+    const templateCards = document.querySelectorAll('.template-card');
+    const skillsContainer = document.getElementById('skillsContainer');
+    const customSummary = document.getElementById('customSummary');
+    const sectionToggles = {
+        summary: document.getElementById('summaryToggle'),
+        experience: document.getElementById('experienceToggle'),
+        education: document.getElementById('educationToggle'),
+        skills: document.getElementById('skillsToggle'),
+        projects: document.getElementById('projectsToggle'),
+        certifications: document.getElementById('certificationsToggle')
+    };
+    const generateBtn = document.getElementById('generateBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    
+    // AI Modal elements
+    const aiModal = new bootstrap.Modal(document.getElementById('aiModal'));
+    const aiImproveBtn = document.getElementById('aiImproveBtn');
+    const aiContent = document.getElementById('aiContent');
+    const aiGoal = document.getElementById('aiGoal');
+    const aiImproveAction = document.getElementById('aiImproveAction');
+    const aiLoading = document.getElementById('aiLoading');
+    const aiResult = document.getElementById('aiResult');
+    const aiImprovedContent = document.getElementById('aiImprovedContent');
+    const aiApplyBtn = document.getElementById('aiApplyBtn');
+    
+    // CV Selection
+    cvSelectBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Reset any previously selected CV
+            cvSelectBtns.forEach(b => b.classList.remove('active'));
+            
+            // Mark this CV as selected
+            this.classList.add('active');
+            
+            // Get CV ID
+            currentCvId = this.getAttribute('data-cv-id');
+            
+            // Show template selector
+            templateSelector.classList.remove('d-none');
+            
+            // Load CV data
+            fetchCvData(currentCvId);
+        });
+    });
+    if (cvSelectBtns.length > 0 && !document.querySelector('.cv-select-btn.active')) {
+        const firstCvBtn = cvSelectBtns[0];
+        firstCvBtn.classList.add('active');
+        currentCvId = firstCvBtn.getAttribute('data-cv-id');
+        templateSelector.classList.remove('d-none');
+        fetchCvData(currentCvId);
+    }
+
+    // Template Selection
+    templateCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Reset any previously selected template
+            templateCards.forEach(c => c.classList.remove('active'));
+            
+            // Mark this template as selected
+            this.classList.add('active');
+            
+            // Get template ID
+            currentTemplate = this.getAttribute('data-template');
+            
+            // Show customization panel
+            customizationPanel.classList.remove('d-none');
+            
+            // Generate preview
+            generatePreview();
+        });
+    });
+    
+    // Section toggles
+    Object.keys(sectionToggles).forEach(section => {
+        sectionToggles[section].addEventListener('change', function() {
+            if (this.checked) {
+                excludedSections = excludedSections.filter(s => s !== section);
+            } else {
+                excludedSections.push(section);
+            }
+            generatePreview();
+        });
+    });
+    
+    // Generate button
+    generateBtn.addEventListener('click', function() {
+        generateFinalResume();
+    });
+    
+    // Zoom controls
+    zoomInBtn.addEventListener('click', function() {
+        scale += 0.1;
+        resumePreview.style.transform = `scale(${scale})`;
+    });
+    
+    zoomOutBtn.addEventListener('click', function() {
+        scale = Math.max(0.5, scale - 0.1);
+        resumePreview.style.transform = `scale(${scale})`;
+    });
+    
+    // AI Improve button
+    aiImproveBtn.addEventListener('click', function() {
+        const section = this.getAttribute('data-section');
+        
+        // Set current content based on section
+        if (section === 'summary') {
+            aiContent.value = customSummary.value;
+        }
+        
+        // Reset modal state
+        aiResult.classList.add('d-none');
+        aiLoading.classList.add('d-none');
+        aiApplyBtn.classList.add('d-none');
+        aiImproveAction.classList.remove('d-none');
+        
+        // Show modal
+        aiModal.show();
+    });
+    
+    // AI Improve action
+    aiImproveAction.addEventListener('click', function() {
+        // Show loading
+        aiLoading.classList.remove('d-none');
+        this.classList.add('d-none');
+        
+        // Get content and goal
+        const content = aiContent.value;
+        const goal = aiGoal.value;
+        
+        // Call AI endpoint
+        fetch('/ai_edit_section', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                section: aiImproveBtn.getAttribute('data-section'),
+                content: content,
+                goal: goal
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Hide loading
+            aiLoading.classList.add('d-none');
+            
+            // Show result
+            aiResult.classList.remove('d-none');
+            aiImprovedContent.textContent = data.updated;
+            
+            // Show apply button
+            aiApplyBtn.classList.remove('d-none');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            aiLoading.classList.add('d-none');
+            aiImproveAction.classList.remove('d-none');
+            alert('Failed to improve content. Please try again.');
+        });
+    });
+    
+    // Apply AI changes
+    aiApplyBtn.addEventListener('click', function() {
+        const section = aiImproveBtn.getAttribute('data-section');
+        
+        // Apply changes based on section
+        if (section === 'summary') {
+            customSummary.value = aiImprovedContent.textContent;
+        }
+        
+        // Hide modal
+        aiModal.hide();
+        
+        // Update preview
+        generatePreview();
+    });
+    
+    // Helper function to fetch CV data
+    function fetchCvData(cvId) {
+        fetch(`/get_cv_data/${cvId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+                
+                // Debug - log the data structure we're receiving
+                console.log('CV Data received:', data);
+                
+                // Store parsed data
+                parsedData = data.parsedData;
+                
+                // Enhanced debugging to help with data structure issues
+                console.log('Contact info:', parsedData.contact_info);
+                console.log('Skills type:', Array.isArray(parsedData.skills) ? 'Array' : typeof parsedData.skills);
+                console.log('Skills length:', parsedData.skills ? parsedData.skills.length : 0);
+                console.log('Skills first item type:', parsedData.skills && parsedData.skills.length > 0 ? 
+                           typeof parsedData.skills[0] : 'N/A');
+                console.log('Skills sample:', parsedData.skills && parsedData.skills.length > 0 ? 
+                           parsedData.skills.slice(0, 3) : 'No skills');
+                console.log('Experience:', parsedData.experience);
+                
+                // Validate data structure integrity
+                if (!parsedData.skills || !Array.isArray(parsedData.skills)) {
+                    console.warn('Skills data is missing or not an array!');
+                }
+                
+                // Set summary
+                customSummary.value = parsedData.summary || '';
+                
+                // Populate skills
+                populateSkills(parsedData.skills || []);
+                
+                // Show template cards
+                templateSelector.classList.remove('d-none');
+                
+                const defaultCard = document.querySelector('.template-card[data-template="executive"]');
+                if (defaultCard) {
+                    defaultCard.classList.add('active');
+                    currentTemplate = 'executive'; 
+                    customizationPanel.classList.remove('d-none');
+                    generatePreview(); // ✅ generate the preview immediately
+}
+                
+                // Show preview controls
+                previewControls.classList.remove('d-none');
+                
+                // Generate initial preview
+                generatePreview();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to load CV data');
+            });
+    }
+    
+    // Helper function to populate skills
+    function populateSkills(skills) {
+        skillsContainer.innerHTML = '';
+        highlightedSkills = [];
+        
+        // Check if skills is an array of strings or objects
+        if (skills.length > 0 && typeof skills[0] === 'object') {
+            // Handle skills objects with name property
+            skills = skills.map(skill => skill.name || '');
+        }
+        
+        // Add each skill as a tag
+        skills.forEach(skill => {
+            if (!skill) return; // Skip empty skills
+            
+            const tag = document.createElement('div');
+            tag.className = 'skill-tag';
+            tag.textContent = skill;
+            tag.dataset.skill = skill;
+            
+            tag.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                
+                if (this.classList.contains('selected')) {
+                    highlightedSkills.push(skill);
+                } else {
+                    highlightedSkills = highlightedSkills.filter(s => s !== skill);
+                }
+                
+                generatePreview();
+            });
+            
+            skillsContainer.appendChild(tag);
+        });
+    }
+    
+    // Helper function to generate preview
+    function generatePreview() {
+        if (!parsedData || !currentCvId) return;
+        
+        // Show customization panel
+        customizationPanel.classList.remove('d-none');
+        
+        // Prepare request data
+        const requestData = {
+            cv_id: currentCvId,
+            template: currentTemplate,
+            customSummary: customSummary.value,
+            highlightedSkills: highlightedSkills,
+            excludedSections: excludedSections
+        };
+        
+        // Call generate endpoint
+        fetch('/generate_resume', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            
+            // Update preview
+            formatPreviewAsHtml(data.formattedResume);
+            
+            // Store download URL
+            downloadUrl = data.downloadUrl;
+            
+            // Show download button
+            downloadBtn.classList.remove('d-none');
+            downloadBtn.href = downloadUrl;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to generate preview');
+        });
+    }
+    
+    // Helper function to generate final resume
+    function generateFinalResume() {
+        // Same as preview but marks as final
+        if (!parsedData || !currentCvId) return;
+        
+        // Call generate endpoint (same as preview)
+        // We're reusing the same endpoint since the behavior is identical
+        generatePreview();
+    }
+    
+    // Helper function to format text as HTML
+    function formatPreviewAsHtml(text) {
+        // Split the text into lines
+        const lines = text.split('\n');
+        let html = '';
+        let inSkillsSection = false;
+        let inList = false;
+        
+        // Process the first line as the name (assuming it's the name)
+        if (lines.length > 0) {
+            html += `<h1 style="font-size: 24px; text-align: center; margin-top: 0; margin-bottom: 5px; color: #2c3e50;">${lines[0]}</h1>`;
+        }
+        
+        // Process the second line as contact info
+        if (lines.length > 1) {
+            html += `<div style="text-align: center; margin-bottom: 20px; font-size: 14px; color: #555;">${lines[1]}</div>`;
+        }
+        
+        // Process the rest of the lines
+        for (let i = 2; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            // Skip empty lines
+            if (!line) {
+                if (inList) {
+                    html += '</ul>';
+                    inList = false;
+                }
+                continue;
+            }
+            
+            // Check if it's a section header
+            if (line.toUpperCase() === line && line.length > 3) {
+                if (inList) {
+                    html += '</ul>';
+                    inList = false;
+                }
+                
+                // Section header
+                html += `<h2 style="font-size: 16px; text-transform: uppercase; margin-top: 15px; margin-bottom: 10px; color: #2980b9; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px;">${line}</h2>`;
+                
+                // Check if we're entering the skills section
+                inSkillsSection = line.includes('SKILLS');
+                continue;
+            }
+            
+            // If we're in the skills section, format as bullet points
+            if (inSkillsSection) {
+                // Format skills with bullets
+                const skills = line.split('•').map(s => s.trim()).filter(s => s);
+                
+                if (skills.length > 0) {
+                    if (!inList) {
+                        html += '<ul style="display: flex; flex-wrap: wrap; gap: 8px; list-style-type: none; margin-left: 0; padding-left: 0;">';
+                        inList = true;
+                    }
+                    
+                    skills.forEach(skill => {
+                        html += `<li style="background-color: #f8f9fa; border-radius: 3px; padding: 2px 8px; font-size: 14px; display: inline-block; margin-bottom: 5px;">${skill}</li>`;
+                    });
+                }
+            } 
+            // If line starts with a bullet point or asterisk
+            else if (line.startsWith('•') || line.startsWith('*') || line.startsWith('-')) {
+                if (!inList) {
+                    html += '<ul style="margin-left: 20px; margin-bottom: 10px; padding-left: 0;">';
+                    inList = true;
+                }
+                
+                // Remove the bullet point character and trim
+                const content = line.substring(1).trim();
+                html += `<li style="margin-bottom: 5px; list-style-type: disc;">${content}</li>`;
+            } 
+            // Regular paragraph
+            else {
+                if (inList) {
+                    html += '</ul>';
+                    inList = false;
+                }
+                
+                html += `<p style="margin-bottom: 10px;">${line}</p>`;
+            }
+        }
+        
+        // Close any open list
+        if (inList) {
+            html += '</ul>';
+        }
+        
+        // Set the HTML content
+        resumePreview.innerHTML = html;
+    }
+});
+</script>
+{% endblock %}
